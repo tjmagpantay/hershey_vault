@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'pages/emoticon_page.dart';
+import 'pages/gif_page.dart';
+import 'pages/meme_page.dart';
+import 'pages/favorites_page.dart';
 
 void main() {
   runApp(const HersheyApp());
@@ -31,7 +35,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 1; // Start with Emoticons selected
+
+  // List of pages corresponding to each tab
+  final List<Widget> _pages = [
+    const Center(child: Text('Home', style: TextStyle(color: Colors.white))), // Index 0 (unused for now)
+    const EmoticonPage(),  // Index 1
+    const GifPage(),       // Index 2
+    const MemePage(),      // Index 3
+    const FavoritesPage(), // Index 4
+  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -52,18 +65,16 @@ class _HomePageState extends State<HomePage> {
           height: 60,
         ),
       ),
-      body: const Center(
-        child: Text(
-          'Your side project starts here',
-          style: TextStyle(fontSize: 18, color: Colors.white),
-        ),
-      ),
+      // Display the page based on selected index
+      body: _pages[_selectedIndex],
       floatingActionButton: SizedBox(
         width: 65,
         height: 65,
         child: FloatingActionButton(
           onPressed: () {},
-          backgroundColor: const Color(0xFF496853),
+          backgroundColor: _selectedIndex > 0 
+              ? const Color(0xFF496853)  // Green when on any tab
+              : const Color(0xFF262932), // Gray when on home
           elevation: 8,
           shape: const CircleBorder(),
           child: SvgPicture.asset(
@@ -136,7 +147,7 @@ class _HomePageState extends State<HomePage> {
             width: 28,
             height: 28,
             colorFilter: ColorFilter.mode(
-              isSelected ? Colors.white : const Color(0xFF777A8D),
+              isSelected ? const Color(0xFF496853) : const Color(0xFF777A8D),
               BlendMode.srcIn,
             ),
           ),
@@ -145,7 +156,7 @@ class _HomePageState extends State<HomePage> {
             label,
             style: TextStyle(
               fontFamily: 'Poppins',
-              color: isSelected ? Colors.white : const Color(0xFF777A8D),
+              color: isSelected ? const Color(0xFF496853) : const Color(0xFF777A8D),
               fontSize: 12,
             ),
           ),
