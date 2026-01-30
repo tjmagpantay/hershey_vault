@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/content_item.dart';
 import '../services/favorites_manager.dart';
 import '../data/content_data.dart';
@@ -71,27 +72,55 @@ class _MemePageState extends State<MemePage> {
 
   void _shareImage(String content) async {
     try {
-      // Share the image file
+      print('Attempting to share: $content');
+      
+      String filePath;
+      
+      // Check if it's an asset or a file path
+      if (content.startsWith('assets/')) {
+        // It's an asset - copy to temp directory first
+        final ByteData data = await rootBundle.load(content);
+        final List<int> bytes = data.buffer.asUint8List();
+        
+        // Get temporary directory
+        final tempDir = await getTemporaryDirectory();
+        final fileName = content.split('/').last;
+        final tempFile = File('${tempDir.path}/$fileName');
+        
+        // Write asset to temp file
+        await tempFile.writeAsBytes(bytes);
+        filePath = tempFile.path;
+        
+        print('Asset copied to: $filePath');
+      } else {
+        // It's already a file path
+        filePath = content;
+      }
+      
+      // Share the file
       await Share.shareXFiles(
-        [XFile(content)],
+        [XFile(filePath)],
         text: 'Check out this meme!',
       );
+      
+      print('Share completed');
     } catch (e) {
-      // Silently handle cancellation - don't show error if user just closes share sheet
+      print('Share error: $e');
+      
+      // Silently handle cancellation
       final errorMsg = e.toString().toLowerCase();
       if (errorMsg.contains('cancelled') || 
           errorMsg.contains('did not call back') ||
           errorMsg.contains('user cancelled')) {
-        // User cancelled, do nothing
         return;
       }
       
       // Only show error for actual failures
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to share this image'),
-            duration: Duration(milliseconds: 1500),
+          SnackBar(
+            content: Text('Unable to share: ${e.toString()}'),
+            duration: const Duration(milliseconds: 2500),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.orange,
           ),

@@ -68,12 +68,16 @@ class _EmoticonPageState extends State<EmoticonPage> {
     return results;
   }
 
-  // Share emoticon when tapped
+  // Copy emoticon to clipboard when tapped
   void _copyToClipboard(String emoticon) {
-    // Use share instead of clipboard
-    Share.share(
-      emoticon,
-      subject: 'Check out this emoticon!',
+    Clipboard.setData(ClipboardData(text: emoticon));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Copied to clipboard!'),
+        duration: Duration(milliseconds: 800),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Color(0xFF496853),
+      ),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/content_item.dart';
 import '../services/favorites_manager.dart';
 import '../data/content_data.dart';
@@ -43,10 +44,15 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   void _handleTap(ContentItem item) {
     if (item.type == ContentType.emoticon) {
-      // Share emoticons as text
-      Share.share(
-        item.content,
-        subject: 'Check out this emoticon!',
+      // Copy emoticons to clipboard
+      Clipboard.setData(ClipboardData(text: item.content));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Copied to clipboard!'),
+          duration: Duration(milliseconds: 800),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Color(0xFF496853),
+        ),
       );
     } else {
       // Share images directly
@@ -56,8 +62,29 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   void _shareImage(String content) async {
     try {
+      String filePath;
+      
+      // Check if it's an asset or a file path
+      if (content.startsWith('assets/')) {
+        // It's an asset - copy to temp directory first
+        final ByteData data = await rootBundle.load(content);
+        final List<int> bytes = data.buffer.asUint8List();
+        
+        // Get temporary directory
+        final tempDir = await getTemporaryDirectory();
+        final fileName = content.split('/').last;
+        final tempFile = File('${tempDir.path}/$fileName');
+        
+        // Write asset to temp file
+        await tempFile.writeAsBytes(bytes);
+        filePath = tempFile.path;
+      } else {
+        // It's already a file path
+        filePath = content;
+      }
+      
       await Share.shareXFiles(
-        [XFile(content)],
+        [XFile(filePath)],
         text: 'Check this out!',
       );
     } catch (e) {
